@@ -1,0 +1,25 @@
+# Hyper-V and cloud image artifacts
+*.vhd
+*.vhdx
+*.avhd
+*.avhdx
+*.qcow2
+*.raw
+*.img
+
+# Generated cloud-init artifacts
+*-meta-data
+cidata/
+vhdx/
+
+# Operating-system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# Local scripts from earlier experiments; not part of this wizard release
+/Prepare-DebianBase.ps1
+/New-DebianVM.ps1
+/Remove-DebianVM.ps1
