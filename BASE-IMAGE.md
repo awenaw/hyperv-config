@@ -67,6 +67,16 @@ chmod +x Prepare-DebianOpsBase.sh
 ./Prepare-DebianOpsBase.sh
 ```
 
+也可以从 Mac 直接执行，并让脚本在安装前临时切换到 Mihomo 网关/DNS：
+
+```bash
+ssh debian@VM_IP -i ~/.ssh/xxx \
+  'MIHOMO_GATEWAY=10.0.0.134 MIHOMO_DNS=10.0.0.134 bash -s' \
+  < ~/prj/hyperv/guest-tools/Prepare-DebianOpsBase.sh
+```
+
+不传 `MIHOMO_GATEWAY` 时，脚本不会修改当前网关或 DNS。
+
 安装期间建议至少提供 `1GB` 内存。Docker 用户组具有接近 root 的权限，只应加入受信任用户。
 
 ## 维护期间临时使用 Mihomo 软路由

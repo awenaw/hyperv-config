@@ -12,9 +12,11 @@
 #   3. VM 必须能够访问 Debian 和 Docker 官方软件源；
 #   4. 脚本会把当前用户加入 docker 组，该组基本拥有 root 等级权限。
 #
-# 从 Mac 直接通过 SSH 执行（不会在 VM 中留下脚本文件）：
+# 从 Mac 直接通过 SSH 执行，并在安装前临时使用 Mihomo 网关/DNS
+# （不会在 VM 中留下脚本文件，也不会把网关永久写入母盘）：
 #   ssh debian@VM_IP -i ~/.ssh/xxx \
-#     'bash -s' < ~/prj/hyperv/guest-tools/Prepare-DebianOpsBase.sh
+#     'MIHOMO_GATEWAY=10.0.0.134 MIHOMO_DNS=10.0.0.134 bash -s' \
+#     < ~/prj/hyperv/guest-tools/Prepare-DebianOpsBase.sh
 #
 # 注意：
 #   本脚本只负责安装和配置。验证完成后，仍需按照 BASE-IMAGE.md 清除
@@ -33,6 +35,31 @@ fi
 if ! sudo -n true; then
     echo "Passwordless sudo is required for non-interactive SSH execution." >&2
     exit 1
+fi
+
+MIHOMO_GATEWAY="${MIHOMO_GATEWAY:-}"
+MIHOMO_DNS="${MIHOMO_DNS:-$MIHOMO_GATEWAY}"
+
+if [[ -n "$MIHOMO_GATEWAY" ]]; then
+    IFACE="$(ip route show default | awk 'NR==1 {print $5}')"
+    if [[ -z "$IFACE" ]]; then
+        echo "Unable to detect the current default network interface." >&2
+        exit 1
+    fi
+
+    echo "[0/4] Temporarily routing through Mihomo at ${MIHOMO_GATEWAY}..."
+    sudo -n ip route replace default via "$MIHOMO_GATEWAY" dev "$IFACE"
+
+    if [[ -n "$MIHOMO_DNS" ]]; then
+        sudo -n resolvectl dns "$IFACE" "$MIHOMO_DNS"
+        sudo -n resolvectl domain "$IFACE" '~.'
+        sudo -n resolvectl flush-caches
+    fi
+
+    if ! getent hosts get.docker.com >/dev/null; then
+        echo "DNS verification failed for get.docker.com." >&2
+        exit 1
+    fi
 fi
 
 MEM_MIB="$(awk '/MemTotal/ {print int($2 / 1024)}' /proc/meminfo)"
