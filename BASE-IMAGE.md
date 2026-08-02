@@ -71,11 +71,18 @@ chmod +x Prepare-DebianOpsBase.sh
 
 ```bash
 ssh debian@VM_IP -i ~/.ssh/xxx \
-  'MIHOMO_GATEWAY=10.0.0.134 MIHOMO_DNS=10.0.0.134 bash -s' \
+  'MIHOMO_GATEWAY=10.0.0.134 MIHOMO_DNS=10.0.0.134 USE_TUNA_MIRROR=1 bash -s' \
   < ~/prj/hyperv/guest-tools/Prepare-DebianOpsBase.sh
 ```
 
-不传 `MIHOMO_GATEWAY` 时，脚本不会修改当前网关或 DNS。
+参数说明：
+
+- 不传 `MIHOMO_GATEWAY` 时，脚本不会修改当前网关或 DNS；
+- `USE_TUNA_MIRROR=1` 将 `/etc/apt/mirrors/debian.list` 切换到清华 TUNA；
+- 原主源备份为 `/etc/apt/mirrors/debian.list.before-tuna`；
+- `debian-security` 继续使用 Debian 官方源，避免安全更新镜像同步延迟。
+
+配置方式遵循[清华 TUNA Debian 镜像帮助](https://mirrors.tuna.tsinghua.edu.cn/help/debian/)。不传 `USE_TUNA_MIRROR=1` 时不修改 APT 软件源。
 
 安装期间建议至少提供 `1GB` 内存。Docker 用户组具有接近 root 的权限，只应加入受信任用户。
 

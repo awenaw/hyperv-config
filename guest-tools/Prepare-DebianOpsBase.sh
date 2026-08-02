@@ -15,7 +15,7 @@
 # 从 Mac 直接通过 SSH 执行，并在安装前临时使用 Mihomo 网关/DNS
 # （不会在 VM 中留下脚本文件，也不会把网关永久写入母盘）：
 #   ssh debian@VM_IP -i ~/.ssh/xxx \
-#     'MIHOMO_GATEWAY=10.0.0.134 MIHOMO_DNS=10.0.0.134 bash -s' \
+#     'MIHOMO_GATEWAY=10.0.0.134 MIHOMO_DNS=10.0.0.134 USE_TUNA_MIRROR=1 bash -s' \
 #     < ~/prj/hyperv/guest-tools/Prepare-DebianOpsBase.sh
 #
 # 注意：
@@ -39,6 +39,7 @@ fi
 
 MIHOMO_GATEWAY="${MIHOMO_GATEWAY:-}"
 MIHOMO_DNS="${MIHOMO_DNS:-$MIHOMO_GATEWAY}"
+USE_TUNA_MIRROR="${USE_TUNA_MIRROR:-0}"
 
 if [[ -n "$MIHOMO_GATEWAY" ]]; then
     IFACE="$(ip route show default | awk 'NR==1 {print $5}')"
@@ -60,6 +61,23 @@ if [[ -n "$MIHOMO_GATEWAY" ]]; then
         echo "DNS verification failed for get.docker.com." >&2
         exit 1
     fi
+fi
+
+if [[ "$USE_TUNA_MIRROR" == "1" ]]; then
+    DEBIAN_MIRROR_FILE="/etc/apt/mirrors/debian.list"
+    DEBIAN_MIRROR_BACKUP="${DEBIAN_MIRROR_FILE}.before-tuna"
+
+    if [[ ! -f "$DEBIAN_MIRROR_FILE" ]]; then
+        echo "Expected Debian cloud-image mirror file not found: ${DEBIAN_MIRROR_FILE}" >&2
+        exit 1
+    fi
+
+    echo "[0/4] Switching the Debian main repository to TUNA..."
+    if [[ ! -e "$DEBIAN_MIRROR_BACKUP" ]]; then
+        sudo -n cp -a "$DEBIAN_MIRROR_FILE" "$DEBIAN_MIRROR_BACKUP"
+    fi
+    printf '%s\n' 'https://mirrors.tuna.tsinghua.edu.cn/debian' \
+        | sudo -n tee "$DEBIAN_MIRROR_FILE" >/dev/null
 fi
 
 MEM_MIB="$(awk '/MemTotal/ {print int($2 / 1024)}' /proc/meminfo)"
