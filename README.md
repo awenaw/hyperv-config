@@ -34,6 +34,7 @@
 ```text
 .
 ├── New-DebianWizard.ps1
+├── TODO.md
 ├── debian-cloud-init/
 │   ├── New-DebianCidata.ps1
 │   ├── New-DebianDisk.ps1
@@ -47,6 +48,8 @@
 ```
 
 仓库不包含母盘、差分盘、CIDATA VHDX、RAW、QCOW2 或个人 SSH 公钥。
+
+后续计划见 [`TODO.md`](TODO.md)。
 
 ## 运行
 
