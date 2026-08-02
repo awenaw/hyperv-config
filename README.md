@@ -52,6 +52,14 @@
 
 将 `New-DebianWizard.ps1` 复制到 Hyper-V 宿主机，以管理员身份打开 PowerShell：
 
+如果当前正在资源管理器的脚本目录中，可在地址栏粘贴下面整行。它会触发 UAC，并在同一个目录打开管理员 PowerShell：
+
+```powershell
+powershell -NoProfile -Command "$here=(Get-Location).Path; Start-Process powershell -Verb RunAs -ArgumentList '-NoExit','-Command',('Set-Location -LiteralPath ''{0}''' -f $here)"
+```
+
+然后执行：
+
 ```powershell
 Unblock-File .\New-DebianWizard.ps1
 .\New-DebianWizard.ps1
