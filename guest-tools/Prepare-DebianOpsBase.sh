@@ -7,7 +7,7 @@
 #   为后续封装新的 Hyper-V 基础镜像（母盘）做准备。
 #
 # 使用要求：
-#   1. 必须以普通 Debian 用户运行，脚本会在需要时调用 sudo；
+#   1. 必须以普通 Debian 用户运行，并已由 cloud-init 配置免密 sudo；
 #   2. 安装期间建议给 VM 至少 1GB 内存；
 #   3. VM 必须能够访问 Debian 和 Docker 官方软件源；
 #   4. 脚本会把当前用户加入 docker 组，该组基本拥有 root 等级权限。
@@ -30,7 +30,10 @@ if [[ "$TARGET_USER" == "root" ]]; then
     exit 1
 fi
 
-sudo -v
+if ! sudo -n true; then
+    echo "Passwordless sudo is required for non-interactive SSH execution." >&2
+    exit 1
+fi
 
 MEM_MIB="$(awk '/MemTotal/ {print int($2 / 1024)}' /proc/meminfo)"
 if (( MEM_MIB < 700 )); then
@@ -38,8 +41,8 @@ if (( MEM_MIB < 700 )); then
 fi
 
 echo "[1/4] Installing operations tools..."
-sudo apt-get update
-sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y \
+sudo -n apt-get update
+sudo -n env DEBIAN_FRONTEND=noninteractive apt-get install -y \
     ca-certificates \
     curl \
     htop \
@@ -61,31 +64,31 @@ sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y \
     bash-completion
 
 echo "[2/4] Installing global l/ll aliases..."
-sudo tee /etc/profile.d/aliases.sh >/dev/null <<'EOF'
+sudo -n tee /etc/profile.d/aliases.sh >/dev/null <<'EOF'
 alias l='ls -CF --color=auto'
 alias ll='ls -alFh --color=auto'
 EOF
-sudo chmod 0644 /etc/profile.d/aliases.sh
+sudo -n chmod 0644 /etc/profile.d/aliases.sh
 
 echo "[3/4] Installing Docker..."
-if sudo docker version >/dev/null 2>&1; then
+if sudo -n docker version >/dev/null 2>&1; then
     echo "Docker is already installed and working; skipping."
 else
     INSTALLER="$(mktemp)"
     trap 'rm -f "$INSTALLER"' EXIT
     curl -fsSL https://get.docker.com -o "$INSTALLER"
-    sudo sh "$INSTALLER"
-    sudo systemctl enable --now containerd docker
+    sudo -n sh "$INSTALLER"
+    sudo -n systemctl enable --now containerd docker
 fi
 
 echo "[4/4] Adding ${TARGET_USER} to the docker group..."
-sudo usermod -aG docker "$TARGET_USER"
+sudo -n usermod -aG docker "$TARGET_USER"
 
 echo
 echo "Installation complete:"
 htop --version | head -n 1
 btop --version
-sudo docker --version
-sudo docker compose version
+sudo -n docker --version
+sudo -n docker compose version
 echo
 echo "Reconnect the SSH session to activate docker group membership and l/ll aliases."
