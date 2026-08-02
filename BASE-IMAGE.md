@@ -69,6 +69,28 @@ chmod +x Prepare-DebianOpsBase.sh
 
 安装期间建议至少提供 `1GB` 内存。Docker 用户组具有接近 root 的权限，只应加入受信任用户。
 
+## 维护期间临时使用 Mihomo 软路由
+
+维护 VM 需要经过 `10.0.0.134` 下载软件时，可临时修改默认路由和 DNS：
+
+```bash
+IFACE=$(ip route show default | awk 'NR==1 {print $5}')
+sudo ip route replace default via 10.0.0.134 dev "$IFACE"
+sudo resolvectl dns "$IFACE" 10.0.0.134
+sudo resolvectl domain "$IFACE" '~.'
+sudo resolvectl flush-caches
+```
+
+验证：
+
+```bash
+ip route get 1.1.1.1
+resolvectl status "$IFACE"
+resolvectl query get.docker.com
+```
+
+该配置只用于维护会话，不应写入母盘或通用 cloud-init 配置。重启、网卡重连或 DHCP 续租后可能恢复；Mihomo `fake-ip` 模式返回 `198.18.x.x` 属于正常现象。
+
 ## 不应写入母盘
 
 - SSH 私钥、令牌、密码或其他秘密；
@@ -109,12 +131,22 @@ sudo rm -rf /var/lib/apt/lists/*
 sudo rm -rf /tmp/* /var/tmp/*
 sudo journalctl --rotate
 sudo journalctl --vacuum-time=1s
-history -c
 sudo fstrim -av
-sudo poweroff
 ```
 
 前三条是 Docker 母盘专用清理：保留软件和开机自启配置，但移除维护 VM 生成的本机运行状态。清理后不要再次启动 Docker 或维护 VM。
+
+完成所有验证和清理后，将下面命令作为普通用户当前 Shell 的最后一条命令执行：
+
+```bash
+history -c && rm -f ~/.bash_history && unset HISTFILE
+```
+
+如果曾使用 `sudo -i` 进入 root Shell，也要在 root Shell 内清除 `/root/.bash_history`。最后关机：
+
+```bash
+sudo poweroff
+```
 
 下一台 VM 首次启动时，由 cloud-init 重新生成 `machine-id` 和 SSH 主机密钥。
 
