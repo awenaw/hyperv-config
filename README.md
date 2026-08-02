@@ -36,6 +36,8 @@
 ├── New-DebianWizard.ps1
 ├── BASE-IMAGE.md
 ├── TODO.md
+├── guest-tools/
+│   └── Prepare-DebianOpsBase.sh
 ├── debian-cloud-init/
 │   ├── New-DebianCidata.ps1
 │   ├── New-DebianDisk.ps1

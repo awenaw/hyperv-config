@@ -51,6 +51,24 @@ pkg-config
 
 语言运行时、容器平台和数据库变化较快，建议由配置管理或项目初始化流程安装，不要全部塞进通用母盘。
 
+## 当前运维母盘预装脚本
+
+仓库中的 [`guest-tools/Prepare-DebianOpsBase.sh`](guest-tools/Prepare-DebianOpsBase.sh) 用于在临时维护 VM 内安装：
+
+- `htop`、`btop`；
+- 全局 `l`、`ll` Bash 别名；
+- `curl`、`jq`、`git`、`vim-tiny`、`less`、`tmux`、`tree`、`ncdu` 等常用运维工具；
+- Docker Engine、Compose 和 Buildx，并将当前普通用户加入 `docker` 组。
+
+复制到维护 VM 后，以普通用户运行：
+
+```bash
+chmod +x Prepare-DebianOpsBase.sh
+./Prepare-DebianOpsBase.sh
+```
+
+安装期间建议至少提供 `1GB` 内存。Docker 用户组具有接近 root 的权限，只应加入受信任用户。
+
 ## 不应写入母盘
 
 - SSH 私钥、令牌、密码或其他秘密；
@@ -80,8 +98,12 @@ pkg-config
 建议在维护 VM 中清理：
 
 ```bash
+sudo systemctl stop docker docker.socket containerd
+sudo rm -rf /var/lib/docker/* /var/lib/containerd/*
+sudo rm -f /etc/docker/key.json
 sudo cloud-init clean --logs --machine-id
 sudo rm -f /etc/ssh/ssh_host_*
+sudo rm -f /home/debian/.ssh/authorized_keys
 sudo apt-get clean
 sudo rm -rf /var/lib/apt/lists/*
 sudo rm -rf /tmp/* /var/tmp/*
@@ -91,6 +113,8 @@ history -c
 sudo fstrim -av
 sudo poweroff
 ```
+
+前三条是 Docker 母盘专用清理：保留软件和开机自启配置，但移除维护 VM 生成的本机运行状态。清理后不要再次启动 Docker 或维护 VM。
 
 下一台 VM 首次启动时，由 cloud-init 重新生成 `machine-id` 和 SSH 主机密钥。
 
