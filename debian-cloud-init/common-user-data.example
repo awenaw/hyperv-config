@@ -1,0 +1,57 @@
+## template: jinja
+#cloud-config
+
+# 设置主机名，并同步维护 /etc/hosts。
+hostname: "{{ v1.local_hostname }}"
+manage_etc_hosts: true
+
+# 创建日常管理用户。
+users:
+  - name: debian
+    gecos: Debian Administrator
+    groups: [adm, sudo]
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    # 不设置密码，仅允许下面的 SSH 公钥登录。
+    lock_passwd: true
+    ssh_authorized_keys:
+      - REPLACE_WITH_YOUR_COMPLETE_SSH_PUBLIC_KEY
+
+# 禁止 root 和 SSH 密码登录。
+disable_root: true
+ssh_pwauth: false
+
+# 每台 VM 重新生成自己的 SSH 主机密钥，避免主机指纹重复。
+ssh_deletekeys: true
+ssh_genkeytypes:
+  - rsa
+  - ecdsa
+  - ed25519
+
+# 云镜像母盘被扩展到 32GB 后，自动扩展根分区和文件系统。
+growpart:
+  mode: auto
+  devices: ['/']
+resize_rootfs: true
+
+# 母盘克隆会继承相同的 machine-id。
+# 此命令只在本实例执行一次：生成新 ID、更新 D-Bus 链接并重新申请 DHCP。
+bootcmd:
+  - [cloud-init-per, instance, unique-machine-id, sh, -c, 'new_id=$(tr -d "-" < /proc/sys/kernel/random/uuid); printf "%s\n" "$new_id" > /etc/machine-id; rm -f /var/lib/dbus/machine-id; ln -s /etc/machine-id /var/lib/dbus/machine-id; systemctl restart systemd-networkd']
+
+# 更新软件索引并安装 Hyper-V 集成组件及常用工具。
+package_update: true
+packages:
+  - hyperv-daemons
+  - curl
+  - ca-certificates
+
+final_message: "Debian {{ v1.local_hostname }} is ready."
+
+# 初始化完成后自动重启一次，让所有服务统一使用新的 machine-id。
+power_state:
+  mode: reboot
+  delay: now
+  message: Rebooting with unique machine-id
+  timeout: 30
+  condition: true

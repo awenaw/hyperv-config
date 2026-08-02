@@ -1,0 +1,7 @@
+# 所有 VM 共用 DHCP，但强制使用 Hyper-V 分配的唯一 MAC 作为客户端标识。
+# 这样即使虚拟机来自同一个母盘，DHCP 也不会把它们识别成同一客户端。
+version: 2
+ethernets:
+  eth0:
+    dhcp4: true
+    dhcp-identifier: mac

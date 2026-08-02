@@ -11,6 +11,7 @@
 *-meta-data
 cidata/
 vhdx/
+/debian-cloud-init/common-user-data
 
 # Operating-system and editor files
 .DS_Store

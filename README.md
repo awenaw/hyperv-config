@@ -10,6 +10,11 @@
 - 创建前显示完整核对清单，只有输入 `CREATE` 才执行；
 - 拒绝覆盖已有 VM/磁盘，失败时回滚本次产生的不完整资源。
 
+仓库同时保留两种使用模式：
+
+- `New-DebianWizard.ps1`：推荐的单文件交互向导；
+- `debian-cloud-init/`：拆分为 CIDATA、差分盘和 VM 三步的学习/排错版本。
+
 ## 前提
 
 - Windows 10/11 Pro、Enterprise 或 Windows Server；
@@ -29,6 +34,13 @@
 ```text
 .
 ├── New-DebianWizard.ps1
+├── debian-cloud-init/
+│   ├── New-DebianCidata.ps1
+│   ├── New-DebianDisk.ps1
+│   ├── New-DebianVM.ps1
+│   ├── common-network-config
+│   ├── common-user-data.example
+│   └── README.md
 ├── README.md
 ├── .gitattributes
 └── .gitignore

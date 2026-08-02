@@ -1,3 +1,5 @@
 *.ps1 text eol=crlf
 *.md text eol=lf
+*.example text eol=lf
+debian-cloud-init/common-network-config text eol=lf
 .* text eol=lf
