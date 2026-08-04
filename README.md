@@ -35,6 +35,7 @@
 .
 ├── New-DebianWizard.ps1
 ├── BASE-IMAGE.md
+├── WINDOWS-BASE-IMAGE.md
 ├── TODO.md
 ├── guest-tools/
 │   └── Prepare-DebianOpsBase.sh
@@ -52,7 +53,7 @@
 
 仓库不包含母盘、差分盘、CIDATA VHDX、RAW、QCOW2 或个人 SSH 公钥。
 
-母盘预装、清理和版本化建议见 [`BASE-IMAGE.md`](BASE-IMAGE.md)，后续计划见 [`TODO.md`](TODO.md)。
+Windows 上从 Debian 官方 QCOW2 制作 VHDX 母盘的完整过程见 [`WINDOWS-BASE-IMAGE.md`](WINDOWS-BASE-IMAGE.md)。母盘预装、清理和版本化建议见 [`BASE-IMAGE.md`](BASE-IMAGE.md)，后续计划见 [`TODO.md`](TODO.md)。
 
 ## 运行
 
